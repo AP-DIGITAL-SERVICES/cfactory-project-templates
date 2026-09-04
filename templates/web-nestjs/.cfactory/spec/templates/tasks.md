@@ -1,28 +1,15 @@
 # {{title}} — Tasks
 
-<!--
 Checklist syntax (required for CFactory wave scheduling):
-  - [ ] 1. Task            pending
-  - [~] 1. Task            in progress
-  - [x] 1. Task            done
-  - [P] 2. Task            may run in parallel with its siblings
-Nested items depend on their parent. Add metadata under a task:
-  - _Depends: 1, 2.1_      explicit dependency edges
-  - _Requirements: FR-001_ traceability back to requirements
-  - _Optional_             skipped by "Run all"; still runnable on its own
 
-Task title rules (from SpecForge SDD):
-  Titles MUST describe the business outcome or capability — NOT the technical artifact.
-  BAD:  "Create User model and migration"
-  GOOD: "Enable persistent storage for user accounts"
+- `[ ]` pending, `[~]` in progress, `[x]` done, `[P]` may run in parallel with siblings
+- Nested checkbox items depend on their parent
+- Metadata under a task: `_Depends: 1, 2.1_`, `_Requirements: FR-001_`, `_Optional_`
 
-Detail block (recommended under each task as bullets — not extra checkboxes):
-  - What: concrete artifacts and file paths
-  - Why: FR / NFR / user-story outcome
-  - Acceptance: observable done signal
--->
+Task title rules: describe the **business outcome**, not the technical artifact.
+Under each task, include What / Why / Acceptance as plain bullets (not checkboxes).
 
-**Organization**: Group by setup → foundational → user stories (P1 first) so each story can ship independently.
+**Organization**: setup → foundational → user stories (P1 first).
 
 ## Phase 1: Setup
 
@@ -50,28 +37,28 @@ Detail block (recommended under each task as bullets — not extra checkboxes):
 
 ## Phase 3: User Story 1 (P1) — MVP
 
-- [ ] 5. <Business-oriented title for story 1 outcome>
+- [ ] 5. Deliver primary user-story outcome
   - What: concrete classes/endpoints/files
   - Why: US1 / FR-…
   - Acceptance: independent test from requirements passes
   - _Requirements: FR-001_
   - _Depends: 3, 4_
-- [P] 6. <Parallelizable follow-on for story 1>
-  - What:
-  - Why:
-  - Acceptance:
+- [P] 6. Complete parallelizable follow-on for story 1
+  - What: supporting surface for story 1
+  - Why: US1
+  - Acceptance: story 1 independent test still passes
   - _Depends: 5_
 
 ## Phase 4: User Story 2 (P2)
 
-- [ ] 7. <Business-oriented title for story 2 outcome>
-  - What:
-  - Why:
-  - Acceptance:
+- [ ] 7. Deliver secondary user-story outcome
+  - What: concrete artifacts for story 2
+  - Why: US2
+  - Acceptance: story 2 independent test passes
   - _Depends: 5_
 
 ## Phase 5: Polish
 
-- [ ] 8. <Docs, observability, or hardening outcome>
+- [ ] 8. Harden observability and operator docs
   - _Optional_
   - _Depends: 7_
