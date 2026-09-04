@@ -1,0 +1,260 @@
+{
+  "version": 1,
+  "id": "platform.data-engineering",
+  "title": "Data engineering",
+  "description": "Full-kit starter for data-engineering (bootstrap, devops, constitution, SDD overlays).",
+  "tags": [
+    "data-engineering",
+    "data",
+    "python"
+  ],
+  "capabilities": [
+    "sdd",
+    "devops",
+    "data"
+  ],
+  "engine": "handlebars",
+  "parameters": [
+    {
+      "key": "project_name",
+      "label": "Project name",
+      "required": true
+    },
+    {
+      "key": "stack",
+      "label": "Stack",
+      "default": "data-engineering",
+      "required": true
+    },
+    {
+      "key": "caching",
+      "label": "caching",
+      "message": "Does your project need caching?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No caching needed",
+          "value": "none"
+        },
+        {
+          "label": "Redis (distributed cache)",
+          "value": "redis"
+        },
+        {
+          "label": "In-memory only (single instance)",
+          "value": "in-memory"
+        }
+      ]
+    },
+    {
+      "key": "queue",
+      "label": "queue",
+      "message": "Does your project need message queues / async processing?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No queues needed",
+          "value": "none"
+        },
+        {
+          "label": "Amazon SQS (managed)",
+          "value": "sqs"
+        }
+      ]
+    },
+    {
+      "key": "streaming",
+      "label": "streaming",
+      "message": "Does your project need event streaming / real-time data pipelines?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No streaming needed",
+          "value": "none"
+        },
+        {
+          "label": "Redis Streams",
+          "value": "redis-streams"
+        },
+        {
+          "label": "Apache Kafka",
+          "value": "kafka"
+        },
+        {
+          "label": "Server-Sent Events (SSE)",
+          "value": "sse"
+        },
+        {
+          "label": "WebSocket (bidirectional)",
+          "value": "websocket"
+        }
+      ]
+    },
+    {
+      "key": "backgroundJobs",
+      "label": "backgroundJobs",
+      "message": "Does your project need background jobs / scheduled tasks?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No background jobs needed",
+          "value": "none"
+        },
+        {
+          "label": "Cloud Scheduler",
+          "value": "cloud-scheduler"
+        }
+      ]
+    },
+    {
+      "key": "search",
+      "label": "search",
+      "message": "Does your project need full-text search?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No search needed",
+          "value": "none"
+        },
+        {
+          "label": "PostgreSQL full-text search",
+          "value": "pg-fts"
+        },
+        {
+          "label": "Meilisearch",
+          "value": "meilisearch"
+        },
+        {
+          "label": "Elasticsearch / OpenSearch",
+          "value": "elasticsearch"
+        },
+        {
+          "label": "Algolia",
+          "value": "algolia"
+        }
+      ]
+    },
+    {
+      "key": "fileStorage",
+      "label": "fileStorage",
+      "message": "Does your project need file/media storage?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No file storage needed",
+          "value": "none"
+        },
+        {
+          "label": "AWS S3 / S3-compatible",
+          "value": "s3"
+        },
+        {
+          "label": "Google Cloud Storage",
+          "value": "gcs"
+        },
+        {
+          "label": "Azure Blob Storage",
+          "value": "azure-blob"
+        }
+      ]
+    },
+    {
+      "key": "orchestrator",
+      "label": "orchestrator",
+      "message": "Data pipeline orchestrator?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "None",
+          "value": "none"
+        },
+        {
+          "label": "Airflow",
+          "value": "airflow"
+        },
+        {
+          "label": "Dagster",
+          "value": "dagster"
+        },
+        {
+          "label": "Prefect",
+          "value": "prefect"
+        }
+      ]
+    },
+    {
+      "key": "dataWarehouse",
+      "label": "dataWarehouse",
+      "message": "Data warehouse?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "None",
+          "value": "none"
+        },
+        {
+          "label": "Snowflake",
+          "value": "snowflake"
+        },
+        {
+          "label": "BigQuery",
+          "value": "bigquery"
+        },
+        {
+          "label": "Redshift",
+          "value": "redshift"
+        }
+      ]
+    },
+    {
+      "key": "dataQuality",
+      "label": "dataQuality",
+      "message": "Data quality tooling?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "None",
+          "value": "none"
+        },
+        {
+          "label": "Great Expectations",
+          "value": "great-expectations"
+        },
+        {
+          "label": "dbt tests",
+          "value": "dbt-tests"
+        }
+      ]
+    },
+    {
+      "key": "dataCatalog",
+      "label": "dataCatalog",
+      "message": "Data catalog?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No data catalog",
+          "value": "none"
+        },
+        {
+          "label": "dbt docs",
+          "value": "dbt-docs"
+        },
+        {
+          "label": "OpenMetadata",
+          "value": "openmetadata"
+        },
+        {
+          "label": "DataHub",
+          "value": "datahub"
+        }
+      ]
+    }
+  ],
+  "exclude": [
+    ".git",
+    "node_modules"
+  ],
+  "recommended": false,
+  "postCreate": {}
+}

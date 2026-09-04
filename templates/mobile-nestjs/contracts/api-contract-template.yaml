@@ -1,0 +1,679 @@
+openapi: 3.0.3
+info:
+  title: "[PROJECT_NAME] Mobile API"
+  description: |
+    API contract for [PROJECT_NAME] mobile application.
+    Generated from spec: /specs/[###-feature-name]/spec.md
+
+    Mobile-optimized: cursor-based pagination, idempotency support,
+    delta sync, push notification management.
+  version: "1.0.0"
+  contact:
+    name: "[TEAM_NAME]"
+    email: "[TEAM_EMAIL]"
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://api.staging.[domain]/v1
+    description: Staging
+  - url: https://api.[domain]/v1
+    description: Production
+
+tags:
+  - name: Auth
+    description: Authentication and token management
+  - name: Devices
+    description: Device registration and push token management
+  - name: Users
+    description: User management
+  - name: "[RESOURCE]"
+    description: "[RESOURCE_DESCRIPTION]"
+  - name: System
+    description: Health checks and app configuration
+
+paths:
+  # --- Authentication ---
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate user
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (invalidate refresh token and deactivate device)
+      operationId: logout
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                  format: uuid
+                  description: Device to deactivate
+      responses:
+        "204":
+          description: Successfully logged out
+
+  # --- Device Management ---
+  /devices:
+    post:
+      tags: [Devices]
+      summary: Register or update device for push notifications
+      operationId: registerDevice
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDeviceRequest"
+      responses:
+        "200":
+          description: Device registered or updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /devices/{id}:
+    delete:
+      tags: [Devices]
+      summary: Deactivate device (stop push notifications)
+      operationId: deactivateDevice
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "204":
+          description: Device deactivated
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # --- Resource CRUD (Mobile-Optimized) ---
+  /[resources]:
+    get:
+      tags: ["[RESOURCE]"]
+      summary: "List [resources] (cursor-based pagination)"
+      operationId: "list[Resources]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CursorParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/UpdatedSinceParam"
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search query
+      responses:
+        "200":
+          description: "Cursor-paginated list of [resources]"
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Entity tag for conditional requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CursorPaginated[Resource]Response"
+        "304":
+          description: Not modified (when If-None-Match matches)
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags: ["[RESOURCE]"]
+      summary: "Create [resource] (idempotent)"
+      operationId: "create[Resource]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Create[Resource]Request"
+      responses:
+        "201":
+          description: "[Resource] created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/[Resource]Response"
+        "200":
+          description: "[Resource] already created (idempotent replay)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/[Resource]Response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /[resources]/{id}:
+    get:
+      tags: ["[RESOURCE]"]
+      summary: "Get [resource] by ID"
+      operationId: "get[Resource]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+          description: ETag for conditional request
+      responses:
+        "200":
+          description: "[Resource] details"
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/[Resource]Response"
+        "304":
+          description: Not modified
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags: ["[RESOURCE]"]
+      summary: "Update [resource]"
+      operationId: "update[Resource]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+        - $ref: "#/components/parameters/IdempotencyKeyHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Update[Resource]Request"
+      responses:
+        "200":
+          description: "[Resource] updated (full representation returned)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/[Resource]Response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: ["[RESOURCE]"]
+      summary: "Delete [resource]"
+      operationId: "delete[Resource]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "204":
+          description: "[Resource] deleted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # --- App Configuration ---
+  /config/app:
+    get:
+      tags: [System]
+      summary: Get app configuration (minimum version, feature flags, etc.)
+      operationId: getAppConfig
+      parameters:
+        - name: X-App-Version
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Current app version
+        - name: X-Platform
+          in: header
+          required: true
+          schema:
+            type: string
+            enum: [ios, android]
+      responses:
+        "200":
+          description: App configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppConfigResponse"
+        "426":
+          description: App version too old, update required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForceUpdateResponse"
+
+  # --- Health ---
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Service is unhealthy
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    CursorParam:
+      name: cursor
+      in: query
+      schema:
+        type: string
+      description: Opaque cursor for next page (from previous response)
+
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    UpdatedSinceParam:
+      name: updated_since
+      in: query
+      schema:
+        type: string
+        format: date-time
+      description: ISO 8601 timestamp for delta sync
+
+    IdempotencyKeyHeader:
+      name: X-Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Client-generated UUID for idempotent operations
+
+  schemas:
+    # --- Auth ---
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        deviceInfo:
+          $ref: "#/components/schemas/DeviceInfo"
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          example: 900
+        user:
+          $ref: "#/components/schemas/UserResponse"
+
+    # --- Device ---
+    DeviceInfo:
+      type: object
+      properties:
+        platform:
+          type: string
+          enum: [ios, android]
+        appVersion:
+          type: string
+        osVersion:
+          type: string
+        deviceModel:
+          type: string
+
+    RegisterDeviceRequest:
+      type: object
+      required: [platform, pushToken, appVersion]
+      properties:
+        platform:
+          type: string
+          enum: [ios, android]
+        pushToken:
+          type: string
+        appVersion:
+          type: string
+        deviceName:
+          type: string
+
+    DeviceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        platform:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    # --- User ---
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+
+    # --- Resource ---
+    "Create[Resource]Request":
+      type: object
+      required: ["[required_fields]"]
+      properties:
+        "[field1]":
+          type: string
+          maxLength: 255
+        "[field2]":
+          type: number
+          minimum: 0
+
+    "Update[Resource]Request":
+      type: object
+      properties:
+        "[field1]":
+          type: string
+          maxLength: 255
+        "[field2]":
+          type: number
+          minimum: 0
+
+    "[Resource]Response":
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        "[field1]":
+          type: string
+        "[field2]":
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    "CursorPaginated[Resource]Response":
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/[Resource]Response"
+        meta:
+          $ref: "#/components/schemas/CursorPaginationMeta"
+
+    CursorPaginationMeta:
+      type: object
+      properties:
+        cursor:
+          type: string
+          nullable: true
+          description: Opaque cursor for next page (null if no more pages)
+        hasMore:
+          type: boolean
+        count:
+          type: integer
+          description: Number of items in current page
+
+    # --- App Config ---
+    AppConfigResponse:
+      type: object
+      properties:
+        minimumVersion:
+          type: string
+          description: Minimum supported app version
+        latestVersion:
+          type: string
+          description: Latest available version
+        forceUpdate:
+          type: boolean
+        maintenanceMode:
+          type: boolean
+        featureFlags:
+          type: object
+          additionalProperties:
+            type: boolean
+
+    ForceUpdateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        minimumVersion:
+          type: string
+        storeUrl:
+          type: string
+          description: App Store / Play Store URL
+
+    # --- System ---
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        info:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: [up, down]
+
+    # --- Error ---
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        error:
+          type: string
+          description: Machine-readable error type
+        code:
+          type: string
+          description: Specific error code for mobile localization
+        message:
+          type: string
+          description: Fallback human-readable message
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+              message:
+                type: string
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            statusCode: 400
+            error: "VALIDATION_ERROR"
+            code: "INVALID_INPUT"
+            message: "Validation failed"
+            details:
+              - field: "email"
+                code: "INVALID_EMAIL"
+                message: "must be a valid email address"
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            statusCode: 401
+            error: "UNAUTHORIZED"
+            code: "TOKEN_EXPIRED"
+            message: "Access token has expired"
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            statusCode: 403
+            error: "FORBIDDEN"
+            code: "INSUFFICIENT_PERMISSIONS"
+            message: "You do not have permission to perform this action"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            statusCode: 404
+            error: "NOT_FOUND"
+            code: "RESOURCE_NOT_FOUND"
+            message: "Resource not found"
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            statusCode: 429
+            error: "RATE_LIMITED"
+            code: "TOO_MANY_REQUESTS"
+            message: "Too many requests"
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until rate limit resets

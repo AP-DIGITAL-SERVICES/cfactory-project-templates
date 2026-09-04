@@ -1,0 +1,42 @@
+# Build outputs
+bin/
+obj/
+out/
+publish/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# NuGet
+.nuget/
+*.nupkg
+*.snupkg
+packages/
+!**/packages/repositories.config
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Test results
+TestResults/
+coverage/
+*.trx
+*.coveragexml
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Secrets
+*.pfx
+*.p12

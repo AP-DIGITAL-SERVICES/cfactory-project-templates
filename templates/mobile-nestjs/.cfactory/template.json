@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "id": "platform.mobile-nestjs",
+  "title": "Mobile (React Native + NestJS)",
+  "description": "Full-kit starter for mobile-nestjs (bootstrap, devops, constitution, SDD overlays).",
+  "tags": [
+    "mobile-nestjs",
+    "mobile",
+    "nestjs",
+    "typescript",
+    "node"
+  ],
+  "capabilities": [
+    "sdd",
+    "devops",
+    "http-api",
+    "mobile"
+  ],
+  "engine": "handlebars",
+  "parameters": [
+    {
+      "key": "project_name",
+      "label": "Project name",
+      "required": true
+    },
+    {
+      "key": "stack",
+      "label": "Stack",
+      "default": "mobile-nestjs",
+      "required": true
+    },
+    {
+      "key": "caching",
+      "label": "caching",
+      "message": "Does your project need caching?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No caching needed",
+          "value": "none"
+        },
+        {
+          "label": "Redis (distributed cache)",
+          "value": "redis"
+        },
+        {
+          "label": "In-memory only (single instance)",
+          "value": "in-memory"
+        }
+      ]
+    },
+    {
+      "key": "queue",
+      "label": "queue",
+      "message": "Does your project need message queues / async processing?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No queues needed",
+          "value": "none"
+        },
+        {
+          "label": "BullMQ (Redis-based)",
+          "value": "bullmq"
+        },
+        {
+          "label": "Amazon SQS (managed)",
+          "value": "sqs"
+        }
+      ]
+    },
+    {
+      "key": "streaming",
+      "label": "streaming",
+      "message": "Does your project need event streaming / real-time data pipelines?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No streaming needed",
+          "value": "none"
+        },
+        {
+          "label": "Redis Streams",
+          "value": "redis-streams"
+        },
+        {
+          "label": "Apache Kafka",
+          "value": "kafka"
+        },
+        {
+          "label": "Server-Sent Events (SSE)",
+          "value": "sse"
+        },
+        {
+          "label": "WebSocket (bidirectional)",
+          "value": "websocket"
+        }
+      ]
+    },
+    {
+      "key": "backgroundJobs",
+      "label": "backgroundJobs",
+      "message": "Does your project need background jobs / scheduled tasks?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No background jobs needed",
+          "value": "none"
+        },
+        {
+          "label": "@nestjs/schedule",
+          "value": "nestjs-schedule"
+        },
+        {
+          "label": "BullMQ repeatable jobs",
+          "value": "bullmq-repeatable"
+        },
+        {
+          "label": "Cloud Scheduler",
+          "value": "cloud-scheduler"
+        }
+      ]
+    },
+    {
+      "key": "search",
+      "label": "search",
+      "message": "Does your project need full-text search?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No search needed",
+          "value": "none"
+        },
+        {
+          "label": "PostgreSQL full-text search",
+          "value": "pg-fts"
+        },
+        {
+          "label": "Meilisearch",
+          "value": "meilisearch"
+        },
+        {
+          "label": "Elasticsearch / OpenSearch",
+          "value": "elasticsearch"
+        },
+        {
+          "label": "Algolia",
+          "value": "algolia"
+        }
+      ]
+    },
+    {
+      "key": "fileStorage",
+      "label": "fileStorage",
+      "message": "Does your project need file/media storage?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No file storage needed",
+          "value": "none"
+        },
+        {
+          "label": "AWS S3 / S3-compatible",
+          "value": "s3"
+        },
+        {
+          "label": "Google Cloud Storage",
+          "value": "gcs"
+        },
+        {
+          "label": "Azure Blob Storage",
+          "value": "azure-blob"
+        }
+      ]
+    },
+    {
+      "key": "pushNotifications",
+      "label": "pushNotifications",
+      "message": "Does your mobile app need push notifications?",
+      "default": "fcm",
+      "choices": [
+        {
+          "label": "No push notifications",
+          "value": "none"
+        },
+        {
+          "label": "Firebase Cloud Messaging",
+          "value": "fcm"
+        },
+        {
+          "label": "FCM + APNs",
+          "value": "fcm-apns"
+        }
+      ]
+    },
+    {
+      "key": "offlineSupport",
+      "label": "offlineSupport",
+      "message": "What level of offline support does the mobile app need?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "None (online only)",
+          "value": "none"
+        },
+        {
+          "label": "Read-only cache",
+          "value": "read-cache"
+        },
+        {
+          "label": "Full offline-first with sync",
+          "value": "offline-first"
+        }
+      ]
+    },
+    {
+      "key": "realtime",
+      "label": "realtime",
+      "message": "Does your mobile app need real-time updates?",
+      "default": "none",
+      "choices": [
+        {
+          "label": "No real-time needed",
+          "value": "none"
+        },
+        {
+          "label": "WebSocket",
+          "value": "websocket"
+        },
+        {
+          "label": "Server-Sent Events (SSE)",
+          "value": "sse"
+        },
+        {
+          "label": "Polling",
+          "value": "polling"
+        }
+      ]
+    }
+  ],
+  "exclude": [
+    ".git",
+    "node_modules"
+  ],
+  "recommended": false,
+  "postCreate": {
+    "commands": [
+      "npm install || true"
+    ]
+  }
+}

@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: "[PROJECT_NAME] API"
+  version: "1.0.0"
+  description: |
+    FastAPI backend contract template with versioning, authentication,
+    idempotent writes, and operational health endpoints.
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local
+  - url: https://api.staging.[domain]/v1
+    description: Staging
+  - url: https://api.[domain]/v1
+    description: Production
+
+tags:
+  - name: Auth
+  - name: [Resource]
+  - name: System
+
+paths:
+  /auth/token:
+    post:
+      tags: [Auth]
+      summary: Issue token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TokenRequest" }
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+
+  /[resources]:
+    get:
+      tags: [[Resource]]
+      summary: List resources
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Paged result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Paginated[Resource]" }
+    post:
+      tags: [[Resource]]
+      summary: Create resource (idempotent)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Create[Resource]" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/[Resource]" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+  /[resources]/{id}:
+    get:
+      tags: [[Resource]]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Resource
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/[Resource]" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [[Resource]]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Update[Resource]" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/[Resource]" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
+  /health/live:
+    get:
+      tags: [System]
+      responses:
+        "200":
+          description: Alive
+
+  /health/ready:
+    get:
+      tags: [System]
+      responses:
+        "200":
+          description: Ready
+        "503":
+          description: Dependency unavailable
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    IdempotencyKey:
+      name: X-Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string }
+
+  schemas:
+    TokenRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string, format: password }
+    TokenResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        tokenType: { type: string, example: bearer }
+        expiresIn: { type: integer, example: 900 }
+    Create[Resource]:
+      type: object
+      required: ["[required_fields]"]
+      properties:
+        "[field]": { type: string }
+    Update[Resource]:
+      type: object
+      properties:
+        "[field]": { type: string }
+    [Resource]:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Paginated[Resource]:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/[Resource]" }
+        meta:
+          type: object
+          properties:
+            nextCursor: { type: string, nullable: true }
+            hasMore: { type: boolean }
+
+    Error:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: array
+          items: { type: object }
+        correlationId: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Authentication failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    UnprocessableEntity:
+      description: Business rule violation
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    TooManyRequests:
+      description: Rate limited
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }

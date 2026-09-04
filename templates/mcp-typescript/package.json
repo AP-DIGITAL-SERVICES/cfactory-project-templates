@@ -1,0 +1,55 @@
+{
+  "name": "{{projectName}}",
+  "version": "0.0.1",
+  "description": "{{projectName}} MCP server — TypeScript",
+  "type": "module",
+  "bin": {
+    "{{projectName}}": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:stdio": "MCP_TRANSPORT=stdio node dist/index.js",
+    "start:http": "MCP_TRANSPORT=http node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint src",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --forceExit",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
+    "test:cov": "node --experimental-vm-modules node_modules/.bin/jest --coverage --forceExit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.23.0"{{#if (eq decision_mcpAuth "jwt-bearer")}},
+    "jsonwebtoken": "^9.0.0",
+    "@types/jsonwebtoken": "^9.0.0"{{/if}}{{#if (eq decision_mcpSidecars "postgres")}},
+    "pg": "^8.11.0",
+    "@types/pg": "^8.11.0"{{/if}}{{#if (eq decision_mcpSidecars "redis")}},
+    "ioredis": "^5.3.2"{{/if}}
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^10.0.0",
+    "typescript-eslint": "^8.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.0"
+  },
+  "overrides": {
+    "fast-uri": ">=3.1.2",
+    "hono": ">=4.12.18"
+  },
+  "jest": {
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [".ts"],
+    "roots": ["<rootDir>/src"],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": ["ts-jest", { "useESM": true }]
+    }
+  }
+}

@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: "[PROJECT_NAME] Web API"
+  version: "1.0.0"
+  description: |
+    Contract template for React frontend and ASP.NET Core backend integration.
+    Keep this contract aligned with generated frontend API clients.
+
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local
+  - url: https://api.staging.[domain]/v1
+    description: Staging
+  - url: https://api.[domain]/v1
+    description: Production
+
+tags:
+  - name: Auth
+  - name: [Resource]
+  - name: System
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /[resources]:
+    get:
+      tags: [[Resource]]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - name: sort
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Paged list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Paged[Resource]" }
+    post:
+      tags: [[Resource]]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Create[Resource]" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/[Resource]" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
+  /[resources]/{id}:
+    get:
+      tags: [[Resource]]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Resource details
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/[Resource]" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [[Resource]]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Update[Resource]" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/[Resource]" }
+
+  /health/live:
+    get:
+      tags: [System]
+      responses:
+        "200":
+          description: Alive
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    AuthResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        expiresIn: { type: integer }
+    Create[Resource]:
+      type: object
+      required: ["[required_fields]"]
+      properties:
+        "[field]": { type: string }
+    Update[Resource]:
+      type: object
+      properties:
+        "[field]": { type: string }
+    [Resource]:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Paged[Resource]:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/[Resource]" }
+        meta:
+          type: object
+          properties:
+            page: { type: integer }
+            pageSize: { type: integer }
+            total: { type: integer }
+
+    Error:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        details:
+          type: array
+          items: { type: object }
+        correlationId: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Authentication failed
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    UnprocessableEntity:
+      description: Validation or business error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }

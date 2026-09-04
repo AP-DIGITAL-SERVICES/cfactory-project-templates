@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{projectName}}"
+version = "0.0.1"
+description = "{{projectName}} — ML project"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26.0",
+    "pandas>=2.2.0",
+    "scikit-learn>=1.4.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+{{#if (eq decision_experimentTracking "mlflow")}}    "mlflow>=2.12.0",
+{{/if}}{{#if (eq decision_experimentTracking "wandb")}}    "wandb>=0.16.0",
+{{/if}}{{#if (eq decision_experimentTracking "dvc")}}    "dvc>=3.49.0",
+{{/if}}{{#if (eq decision_modelRegistry "hf-hub")}}    "huggingface-hub>=0.22.0",
+{{/if}}{{#if (eq decision_featureStore "feast")}}    "feast>=0.38.0",
+{{/if}}{{#if (eq decision_featureStore "redis-features")}}    "redis>=5.0.0",
+{{/if}}{{#if (eq decision_modelServing "fastapi")}}    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+{{/if}}{{#if (eq decision_modelServing "bentoml")}}    "bentoml>=1.2.0",
+{{/if}}]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.4.0",
+    "jupyter>=1.0.0",
+    "ipykernel>=6.29.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

@@ -1,0 +1,57 @@
+# .NET build outputs
+bin/
+obj/
+out/
+publish/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.rsuser
+
+# NuGet
+.nuget/
+*.nupkg
+packages/
+!**/packages/repositories.config
+
+# Node / Frontend
+node_modules/
+dist/
+
+# Vite
+.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*
+!.env.example
+
+# Test results
+TestResults/
+coverage/
+*.trx
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Secrets
+*.pfx
+*.p12

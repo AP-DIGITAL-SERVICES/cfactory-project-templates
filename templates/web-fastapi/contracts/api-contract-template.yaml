@@ -1,0 +1,463 @@
+openapi: 3.0.3
+info:
+  title: "[PROJECT_NAME] API"
+  description: |
+    API contract for [PROJECT_NAME].
+    Generated from spec: /specs/[###-feature-name]/spec.md
+
+    FastAPI auto-generates this from Pydantic models and route decorators.
+    This template serves as the baseline contract for design review before implementation.
+  version: "1.0.0"
+  contact:
+    name: "[TEAM_NAME]"
+    email: "[TEAM_EMAIL]"
+
+servers:
+  - url: http://localhost:8000/api
+    description: Local development
+  - url: https://api.staging.[domain]
+    description: Staging
+  - url: https://api.[domain]
+    description: Production
+
+tags:
+  - name: Auth
+    description: Authentication and authorization
+  - name: Users
+    description: User management
+  - name: "[RESOURCE]"
+    description: "[RESOURCE_DESCRIPTION]"
+
+paths:
+  # --- Authentication ---
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate user
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # --- Resource CRUD (Example) ---
+  /[resources]:
+    get:
+      tags: ["[RESOURCE]"]
+      summary: "List [resources]"
+      operationId: "list_[resources]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SortParam"
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search query
+      responses:
+        "200":
+          description: "Paginated list of [resources]"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Paginated[Resource]Response"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags: ["[RESOURCE]"]
+      summary: "Create [resource]"
+      operationId: "create_[resource]"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Create[Resource]Request"
+      responses:
+        "201":
+          description: "[Resource] created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/[Resource]Response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /[resources]/{id}:
+    get:
+      tags: ["[RESOURCE]"]
+      summary: "Get [resource] by ID"
+      operationId: "get_[resource]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: "[Resource] details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/[Resource]Response"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags: ["[RESOURCE]"]
+      summary: "Update [resource]"
+      operationId: "update_[resource]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Update[Resource]Request"
+      responses:
+        "200":
+          description: "[Resource] updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/[Resource]Response"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: ["[RESOURCE]"]
+      summary: "Delete [resource]"
+      operationId: "delete_[resource]"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "204":
+          description: "[Resource] deleted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # --- Health ---
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      operationId: health_check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Service is unhealthy
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Resource UUID
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number
+
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Items per page
+
+    SortParam:
+      name: sort
+      in: query
+      schema:
+        type: string
+        pattern: "^[a-zA-Z_]+:(asc|desc)$"
+        example: "created_at:desc"
+      description: "Sort field and direction (field:asc|desc)"
+
+  schemas:
+    # --- Auth ---
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+
+    RefreshTokenRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: "bearer"
+        expires_in:
+          type: integer
+          example: 900
+
+    # --- Resource ---
+    "Create[Resource]Request":
+      type: object
+      required: ["[required_fields]"]
+      properties:
+        "[field1]":
+          type: string
+          maxLength: 255
+        "[field2]":
+          type: number
+          minimum: 0
+
+    "Update[Resource]Request":
+      type: object
+      properties:
+        "[field1]":
+          type: string
+          maxLength: 255
+        "[field2]":
+          type: number
+          minimum: 0
+
+    "[Resource]Response":
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        "[field1]":
+          type: string
+        "[field2]":
+          type: number
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    "Paginated[Resource]Response":
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/[Resource]Response"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    # --- System ---
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        checks:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [up, down]
+            redis:
+              type: string
+              enum: [up, down, "n/a"]
+
+    # --- Error ---
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            fields:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            detail:
+              code: "VALIDATION_ERROR"
+              message: "Validation failed"
+              fields:
+                - field: "email"
+                  message: "value is not a valid email address"
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            detail:
+              code: "UNAUTHORIZED"
+              message: "Invalid or expired token"
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            detail:
+              code: "FORBIDDEN"
+              message: "Insufficient permissions"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            detail:
+              code: "NOT_FOUND"
+              message: "Resource not found"
+
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            detail:
+              code: "CONFLICT"
+              message: "Resource already exists"
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            detail:
+              code: "RATE_LIMITED"
+              message: "Too many requests"
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until rate limit resets
